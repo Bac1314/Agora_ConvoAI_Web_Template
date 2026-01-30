@@ -1,0 +1,34 @@
+{
+  "name": "agora-akool-anime-girlfriend",
+  "version": "1.0.0",
+  "description": "AI Anime Girlfriend Demo with Agora ConvoAI and Akool Avatar",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "build": "echo 'No build step required for vanilla JS frontend'",
+    "test": "echo 'No tests specified'"
+  },
+  "dependencies": {
+    "agora-rtc-sdk-ng": "^4.24.1",
+    "agora-rtm": "^2.2.3-2",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "keywords": [
+    "agora",
+    "akool",
+    "avatar",
+    "conversational-ai",
+    "webrtc",
+    "anime",
+    "chat"
+  ],
+  "author": "",
+  "license": "MIT"
+}
