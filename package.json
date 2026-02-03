@@ -1,7 +1,7 @@
 {
-  "name": "agora-akool-anime-girlfriend",
+  "name": "agora-conversational-ai-web-template",
   "version": "1.0.0",
-  "description": "AI Anime Girlfriend Demo with Agora ConvoAI and Akool Avatar",
+  "description": "The template to quickly get started with building Conversational AI applications using Agora's Conversational A",
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
