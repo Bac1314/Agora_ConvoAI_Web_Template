@@ -1,19 +1,43 @@
 const axios = require('axios');
+const { AccessToken2, ServiceRtc, ServiceRtm } = require('agora-token/src/AccessToken2');
 
 // Note: User returning status is now determined by presence of chat history
 
 const getChannelInfo = (req, res) => {
   const { channel, uid } = req.query;
-  
+
   if (!channel || !uid) {
     return res.status(400).json({ error: 'Channel and uid are required' });
   }
 
   try {
-    res.json({ 
-      appId: process.env.AGORA_APP_ID,
+    const appId = process.env.AGORA_APP_ID;
+    const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+
+    // If the server has the app certificate, generate an ephemeral token and return it.
+    if (appCertificate) {
+      try {
+        const result = buildUnifiedToken(appId, appCertificate, channel, uid);
+        return res.json({
+          appId,
+          channel,
+          uid: parseInt(uid),
+          token: result.token,
+          expiresIn: result.expiresIn
+        });
+      } catch (err) {
+        console.error('Failed to build token inside getChannelInfo:', err);
+        // fallthrough to return public info without token
+      }
+    }
+
+    // Return public channel/app information when token cannot be generated
+    res.json({
+      appId,
       channel,
-      uid: parseInt(uid)
+      uid: parseInt(uid),
+      token: null,
+      expiresIn: 0
     });
   } catch (error) {
     console.error('Channel info error:', error);
@@ -23,9 +47,9 @@ const getChannelInfo = (req, res) => {
 
 const startConversation = async (req, res) => {
   try {
-    const { channel, agentName, remoteUid, userName, previousConversations, voiceId } = req.body;
+    const { channel, agentName, remoteUid: userUid, voiceId } = req.body;
     
-    if (!channel || !agentName || !remoteUid) {
+    if (!channel || !agentName || !userUid) {
       return res.status(400).json({ 
         error: 'Channel, agentName, and remoteUid are required' 
       });
@@ -47,15 +71,18 @@ const startConversation = async (req, res) => {
     }
 
     // Use provided system prompt or fall back to env variable or default
-    const defaultSystemPrompt = "You are a friendly AI companion " || process.env.LLM_SYSTEM_PROMPT;
+    const defaultSystemPrompt = process.env.LLM_SYSTEM_PROMPT || "You are a friendly AI companion";
+    const appId = process.env.AGORA_APP_ID;
+    const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+    const agentToken = appCertificate ? buildUnifiedToken(appId, appCertificate, channel, agentUid).token : "";
 
     const requestBody = {
       name: agentName,
       properties: {
         channel: channel,
-        token: "", // Empty token for testing, should generate proper token for production
+        token: agentToken,
         agent_rtc_uid: agentUid.toString(),
-        remote_rtc_uids: [remoteUid.toString()],
+        remote_rtc_uids: [userUid.toString()],
         enable_string_uid: false,
         idle_timeout: 30,
         asr: {
@@ -68,36 +95,17 @@ const startConversation = async (req, res) => {
           system_messages: [
             {
               role: "system",
-              content: effectiveSystemPrompt
+              content: defaultSystemPrompt
             }
           ],
-          greeting_message: defaultSystemPrompt,
+          greeting_message: "Hello there! I'm your AI assistant. How can I help you today?",
           failure_message: "Sorry, I'm having some trouble right now. Let me try again!",
           params: {
             model: process.env.LLM_MODEL || "gpt-4o-mini"
           },
-          input_modalities: ["text", "image"],
+          input_modalities: ["text"],
           output_modalities: ["text"]
         },
-        // tts: {
-        //   vendor: "elevenlabs",
-        //   params: {
-        //     key: process.env.TTS_ElevenLabs_API_KEY,
-        //     base_url: process.env.TTS_ElevenLabs_BASE_URL,
-        //     voice_id: process.env.TTS_ElevenLabs_VOICE_ID,
-        //     model_id: process.env.TTS_ElevenLabs_MODEL_ID, 
-        //     sample_rate: 16000
-        //   }
-        // },
-        // tts: { 
-        //   vendor: "microsoft",
-        //   params: {
-        //     key: process.env.TTS_Microsoft_API_KEY,
-        //     region: process.env.TTS_Microsoft_REGION,
-        //     voice_name: process.env.TTS_Microsoft_VOICE, 
-        //     sample_rate: 16000
-        //   }
-        // },
         tts: { 
           vendor: "minimax", 
           params: { 
@@ -149,7 +157,6 @@ const startConversation = async (req, res) => {
       success: true,
       agentId: response.data.agent_id,
       agentUid: agentUid,
-      avatarUid: avatarUid,
       channel: channel
     });
 
@@ -207,6 +214,62 @@ const stopConversation = async (req, res) => {
     });
   }
 };
+
+// Helper: build unified RTC + RTM token
+function buildUnifiedToken(appId, appCertificate, channel, uid, expirationTimeInSeconds = 3600) {
+  const numericUid = parseInt(uid);
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+
+  const token = new AccessToken2(appId, appCertificate, currentTimestamp, expirationTimeInSeconds);
+
+  const serviceRtc = new ServiceRtc(channel, numericUid);
+  serviceRtc.add_privilege(ServiceRtc.kPrivilegeJoinChannel, privilegeExpiredTs);
+  serviceRtc.add_privilege(ServiceRtc.kPrivilegePublishAudioStream, privilegeExpiredTs);
+  serviceRtc.add_privilege(ServiceRtc.kPrivilegePublishVideoStream, privilegeExpiredTs);
+  serviceRtc.add_privilege(ServiceRtc.kPrivilegePublishDataStream, privilegeExpiredTs);
+  token.add_service(serviceRtc);
+
+  const serviceRtm = new ServiceRtm(uid.toString());
+  serviceRtm.add_privilege(ServiceRtm.kPrivilegeLogin, privilegeExpiredTs);
+  token.add_service(serviceRtm);
+
+  return {
+    token: token.build(),
+    expiresIn: expirationTimeInSeconds
+  };
+}
+
+// // Generate ephemeral tokens for RTC and RTM. Kept separate from `getChannelInfo` for security.
+// const generateToken = (req, res) => {
+//   const { channel, uid } = req.query;
+
+//   if (!channel || !uid) {
+//     return res.status(400).json({ error: 'Channel and uid are required' });
+//   }
+
+//   try {
+//     const appId = process.env.AGORA_APP_ID;
+//     const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+
+//     if (!appCertificate) {
+//       console.warn('AGORA_APP_CERTIFICATE not configured, cannot generate token');
+//       return res.status(500).json({ error: 'App certificate not configured - token not generated' });
+//     }
+//     const result = buildUnifiedToken(appId, appCertificate, channel, uid);
+
+//     res.json({
+//       appId,
+//       channel,
+//       uid: parseInt(uid),
+//       token: result.token,
+//       expiresIn: result.expiresIn
+//     });
+//   } catch (error) {
+//     console.error('Token generation error:', error);
+//     res.status(500).json({ error: 'Failed to generate token' });
+//   }
+// };
 
 module.exports = {
   getChannelInfo,

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agora AI Voice Call</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="/lib/agora-rtc-sdk-ng/AgoraRTC_N-production.js"></script>
+  <script src="/lib/agora-rtm/agora-rtm.js"></script>
+</head>
+<body>
+  <main class="card">
+    <div class="header">
+      <h1>Agora ConvoAI Demo</h1>
+      <p class="muted">Simple interface to start and stop ConvoAI conversations</p>
+    </div>
+
+    <section class="controls">
+      <button id="join" class="btn primary">Start ConvoAI</button>
+      <button id="leave" class="btn danger" disabled>Stop ConvoAI</button>
+    </section>
+
+    <footer class="foot">
+      <small>ConvoAI integration with Agora RTC/RTM</small>
+    </footer>
+  </main>
+
+  <script src="utils/config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

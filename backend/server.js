@@ -11,6 +11,18 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// IP Whitelist middleware (optional additional security)
+const allowedIPs = process.env.ALLOWED_IPS ? process.env.ALLOWED_IPS.split(',') : [];
+if (allowedIPs.length > 0) {
+  app.use((req, res, next) => {
+    const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+    if (!allowedIPs.includes(clientIP)) {
+      return res.status(403).json({ error: 'Access denied from this IP address' });
+    }
+    next();
+  });
+}
+
 // Health check endpoint (no auth required for monitoring)
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
