@@ -10,7 +10,7 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
-body{background:linear-gradient(180deg,#fbfdff 0%,var(--bg) 100%);color:#0f172a;padding:40px;display:flex;align-items:center;justify-content:center}
+body{background:linear-gradient(45deg, #cfe9f761 0%,var(--bg) 100%);color:#0f172a;padding:40px;display:flex;align-items:center;justify-content:center}
 .card{width:920px;max-width:96%;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
 .header h1{margin:0;font-size:20px}
 .muted{color:var(--muted);margin-top:6px;font-size:13px}
@@ -18,13 +18,45 @@ body{background:linear-gradient(180deg,#fbfdff 0%,var(--bg) 100%);color:#0f172a;
 .form label{flex:1;display:flex;flex-direction:column;font-size:13px;color:#0f172a}
 .form input{margin-top:8px;padding:10px 12px;border:1px solid #e6eef8;border-radius:8px;background:#fcfeff}
 .controls{display:flex;gap:12px;margin-top:18px}
-.btn{background:#fff;border:1px solid #e6eef8;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600;color:#0f172a;box-shadow:none}
+.btn{background:#fff;border:1px solid #e6eef8;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600;color:#0f172a;box-shadow:none;position:relative;transition:all 0.3s ease}
 .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+.btn.primary:hover:not(:disabled){background:#1d4ed8;transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,0.2)}
 .btn.danger{background:var(--danger);color:#fff;border-color:transparent}
+.btn.danger:hover:not(:disabled){background:#dc2626;transform:translateY(-1px);box-shadow:0 4px 12px rgba(239,68,68,0.2)}
 .btn.small{padding:6px 8px;font-size:13px}
 .btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn.loading{cursor:wait;opacity:0.8}
+.btn.loading .btn-text{display:none}
+.btn.loading .btn-loading{display:inline-flex!important;align-items:center;gap:8px}
+.btn.loading .btn-loading::before{content:'';width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .remote{margin-top:20px}
 .remote-list{display:flex;gap:12px;flex-wrap:wrap}
 .remote audio{display:block;width:100%}
 .foot{margin-top:18px;color:var(--muted);font-size:12px}
+.ai-visualizer{margin-bottom:20px;padding:20px;border:1px solid #e6eef8;border-radius:var(--radius);opacity:0;animation:fadeIn 0.5s forwards}
+.visualizer-container{text-align:center}
+.wave-bars{display:flex;justify-content:center;align-items:center;gap:4px;height:60px;margin-bottom:12px}
+.wave-bar{width:16px;border-radius:8px;height:15px;transform-origin:bottom}
+.wave-bar:nth-child(1){background:linear-gradient(180deg,#ff6b6b,#ee5a52)}
+.wave-bar:nth-child(2){background:linear-gradient(180deg,#4ecdc4,#44a08d)}
+.wave-bar:nth-child(3){background:linear-gradient(180deg,#45b7d1,#2196f3)}
+.wave-bar:nth-child(4){background:linear-gradient(180deg,#96ceb4,#4caf50)}
+.wave-bar:nth-child(5){background:linear-gradient(180deg,#feca57,#ff9f43)}
+.wave-bar:nth-child(6){background:linear-gradient(180deg,#ff9ff3,#e91e63)}
+.wave-bar:nth-child(7){background:linear-gradient(180deg,#a8e6cf,#88d8a3)}
+.wave-bar:nth-child(8){background:linear-gradient(180deg,#dda0dd,#9c27b0)}
+@keyframes gentleWave{0%,100%{transform:scaleY(0.8)}50%{transform:scaleY(1.2)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.ai-status{color:#fff;font-size:14px;font-weight:500;margin:0}
+.agent-state{margin-bottom:20px;padding:12px;background:#f8fafc;border-radius:8px;display:flex;justify-content:center}
+.state-indicator{display:flex;align-items:center;gap:8px}
+.state-dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;animation:pulse 2s infinite}
+.state-text{font-size:13px;color:#475569;font-weight:500}
+.agent-state.state-speaking .state-dot{background:#10b981;animation:pulse 0.8s infinite}
+.agent-state.state-thinking .state-dot{background:#f59e0b;animation:pulse 1s infinite}
+.agent-state.state-listening .state-dot{background:#3b82f6;animation:pulse 1.5s infinite}
+.agent-state.state-idle .state-dot{background:#9ca3af;animation:pulse 2s infinite}
+.agent-state.state-offline .state-dot{background:#ef4444;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 @media (max-width:640px){.form{flex-direction:column}}

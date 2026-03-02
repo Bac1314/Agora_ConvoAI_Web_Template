@@ -15,9 +15,37 @@
       <p class="muted">Simple interface to start and stop ConvoAI conversations</p>
     </div>
 
+    <section id="agent-state" class="agent-state">
+      <div class="state-indicator">
+        <span class="state-dot"></span>
+        <span class="state-text">AI is offline</span>
+      </div>
+    </section>
+
+    <section id="ai-visualizer" class="ai-visualizer">
+      <div class="visualizer-container">
+        <div class="wave-bars">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="controls">
-      <button id="join" class="btn primary">Start ConvoAI</button>
-      <button id="leave" class="btn danger" disabled>Stop ConvoAI</button>
+      <button id="join" class="btn primary">
+        <span class="btn-text">Start ConvoAI</span>
+        <span class="btn-loading" style="display: none;">Starting...</span>
+      </button>
+      <button id="leave" class="btn danger" disabled>
+        <span class="btn-text">Stop ConvoAI</span>
+        <span class="btn-loading" style="display: none;">Stopping...</span>
+      </button>
     </section>
 
     <footer class="foot">
@@ -26,6 +54,7 @@
   </main>
 
   <script src="utils/config.js"></script>
+  <script src="audioVisualizer.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

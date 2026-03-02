@@ -121,8 +121,28 @@ const startConversation = async (req, res) => {
             }
           }
         },
+        turn_detection: {
+          mode: "default",
+          config: {
+            speech_threshold: 0.5,
+            start_of_speech: {
+              mode: "vad",
+              vad_config: {
+                interrupt_duration_ms: 160,
+                speaking_interrupt_duration_ms: 320,
+                prefix_padding_ms: 800
+              }
+            },
+            end_of_speech: {
+              mode: "semantic",
+              semantic_config: {
+                silence_duration_ms: 320,
+                max_wait_ms: 3000
+              }
+            }
+          }
+        },
         advanced_features: {
-          enable_aivad: true,
           enable_bhvs: true,
           enable_rtm: true
         },
@@ -156,7 +176,7 @@ const startConversation = async (req, res) => {
     res.json({
       success: true,
       agentId: response.data.agent_id,
-      agentUid: agentUid,
+      agentUid: agentUid || 2000000 + Math.floor(Math.random() * 1000),
       channel: channel
     });
 
@@ -239,37 +259,6 @@ function buildUnifiedToken(appId, appCertificate, channel, uid, expirationTimeIn
     expiresIn: expirationTimeInSeconds
   };
 }
-
-// // Generate ephemeral tokens for RTC and RTM. Kept separate from `getChannelInfo` for security.
-// const generateToken = (req, res) => {
-//   const { channel, uid } = req.query;
-
-//   if (!channel || !uid) {
-//     return res.status(400).json({ error: 'Channel and uid are required' });
-//   }
-
-//   try {
-//     const appId = process.env.AGORA_APP_ID;
-//     const appCertificate = process.env.AGORA_APP_CERTIFICATE;
-
-//     if (!appCertificate) {
-//       console.warn('AGORA_APP_CERTIFICATE not configured, cannot generate token');
-//       return res.status(500).json({ error: 'App certificate not configured - token not generated' });
-//     }
-//     const result = buildUnifiedToken(appId, appCertificate, channel, uid);
-
-//     res.json({
-//       appId,
-//       channel,
-//       uid: parseInt(uid),
-//       token: result.token,
-//       expiresIn: result.expiresIn
-//     });
-//   } catch (error) {
-//     console.error('Token generation error:', error);
-//     res.status(500).json({ error: 'Failed to generate token' });
-//   }
-// };
 
 module.exports = {
   getChannelInfo,
